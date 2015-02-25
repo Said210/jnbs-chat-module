@@ -9,7 +9,7 @@ class MessagesController < ApplicationController
 
   def history
   	response.headers['Access-Control-Allow-Origin'] = "*"
-  	render json: Message.where("(messages.sent_by = ? AND messages.sent_to = ?) OR (messages.sent_by = ? AND messages.sent_to = ?)", current_user.id,params[:id],params[:id],current_user.id).take(15)
+  	render json: Message.where("(messages.sent_by = ? AND messages.sent_to = ?) OR (messages.sent_by = ? AND messages.sent_to = ?)", params[:me],params[:id],params[:id],params[:me]).take(15)
   end
 
 
