@@ -1,6 +1,8 @@
 class MessagesController < ApplicationController
   include ActionController::Live
   skip_before_filter :verify_authenticity_token
+  require 'open-uri'
+  require 'json'
   
   def index
   	@message = Message.new
@@ -33,6 +35,7 @@ class MessagesController < ApplicationController
 		Message.on_change do |data|
 			
 	    	message = Message.find(data)
+
 	    	if( sent_by_me_to(message, id, me) || sent_to_me_by(message, id, me) )
 		        message = message.to_json
 		        puts "sep => id: #{id}  me: #{me}"
@@ -52,19 +55,23 @@ class MessagesController < ApplicationController
   def profile_chat_monitor
   	response.headers['Access-Control-Allow-Origin'] = "*"
     response.headers['Content-Type'] = 'text/event-stream'
-    #decipher = OpenSSL::Cipher::AES.new(128, :CBC)
-    #decipher.decrypt
-    #decipher.key = "huyjgfvcdrjhg314"
-    #decipher.iv = params[:iv]
-    #id = decipher.update(params[:id]) + decipher.final
     id = params[:id]
     sse = SSE.new(response.stream)
   begin
     Message.on_change do |data|
       message = Message.find(data)
+      template = {sent_by: "", sent_to: "", message: "", role: "", sent_by_username: "", sent_to_username: ""}
       if( sent_to_me(message, id) )
+      	_sent_by =  JSON.parse(open("http://localhost:3000/api/public/u/" + message.sent_by.to_s).read)
+		_sent_to =  JSON.parse(open("http://localhost:3000/api/public/u/" + message.sent_to.to_s).read)
+		template[:sent_by] = message.sent_by.to_s
+		template[:sent_to] = message.sent_to.to_s
+		template[:role] = _sent_by['role']
+		template[:message] = message.message
+		template[:sent_by_username] = _sent_by['username']
+		template[:sent_to_username] = _sent_to['username']
         puts "monitor acceped"
-        message = message.to_json
+        message = template.to_json
         sse.write(message)
       else
         puts "monitor denied"
