@@ -21,7 +21,7 @@ module Chat
     # config.i18n.default_locale = :de
 
     # Do not swallow errors in after_commit/after_rollback callbacks.
-    
+    REMOTE_SERVER = "http://localhost:3000/"
     config.middleware.insert_before 0, "Rack::Cors" do
       allow do
         origins '*'
